@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Cyberbullying Shield</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      width: 300px;
+      padding: 15px;
+    }
+    h1 {
+      font-size: 18px;
+      margin-top: 0;
+    }
+    textarea {
+      width: 100%;
+      height: 100px;
+      margin: 10px 0;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+    button {
+      background: #0078d7;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .result {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    .safe {
+      background: #e8f5e9;
+      border: 1px solid #c8e6c9;
+    }
+    .bullying {
+      background: #ffebee;
+      border: 1px solid #ffcdd2;
+    }
+    .category {
+      margin-top: 5px;
+      padding: 3px 0;
+    }
+    .settings {
+      margin-top: 15px;
+      border-top: 1px solid #eee;
+      padding-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Cyberbullying Shield</h1>
+  <p>Enter text to analyze for cyberbullying content:</p>
+  <textarea id="textInput" placeholder="Type or paste text here..."></textarea>
+  <button id="checkButton">Check Now</button>
+  
+  <div id="result" style="display: none;" class="result"></div>
+  
+  <div class="settings">
+    <h2 style="font-size: 16px;">Settings</h2>
+    <div>
+      <input type="checkbox" id="enableAutoCheck">
+      <label for="enableAutoCheck">Enable automatic checking on social media</label>
+    </div>
+    <div>
+      <input type="checkbox" id="enableNotifications">
+      <label for="enableNotifications">Show notifications for detected content</label>
+    </div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
