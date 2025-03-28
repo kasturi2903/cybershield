@@ -4,7 +4,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
-// Function to monitor text input fields on social media sites
+// Function to monitor text fields on social media sites
 function monitorTextFields() {
   // Find comment/post input fields based on common selectors
   const inputSelectors = [
@@ -23,40 +23,40 @@ function monitorTextFields() {
     if (input.dataset.bullyingCheckerAttached) return;
     input.dataset.bullyingCheckerAttached = "true";
     
-    // Add button next to input field
-    const button = document.createElement('button');
-    button.textContent = 'Check for bullying';
-    button.className = 'bullying-check-btn';
-    button.style.cssText = `
-      background: #0078d7;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 5px 10px;
-      font-size: 12px;
-      cursor: pointer;
-      margin: 5px;
-    `;
+    // Remove button creation code and replace with automatic checking
+    let lastCheckedText = '';
     
-    // Insert button after input field
-    input.parentNode.insertBefore(button, input.nextSibling);
-    
-    // Check button click
-    button.addEventListener('click', () => {
-      const text = input.value || input.textContent;
-      if (text.trim()) {
+    // Function to check text every 5 seconds
+    function checkForBullying() {
+      const text = input.value || input.textContent || '';
+      
+      // Only send for analysis if text has changed since last check and isn't empty
+      if (text.trim() && text !== lastCheckedText) {
+        lastCheckedText = text;
+        
         chrome.runtime.sendMessage(
           { action: "analyzeText", text: text },
           (response) => {
-            if (response.prediction === "cyberbullying") {
+            // Only show popup if cyberbullying is detected
+            if (response && response.prediction === "cyberbullying") {
               showWarning(input, response);
             } else {
-              showSafe(input);
+              // Remove any existing warnings if content is now safe
+              const existingWarning = input.parentNode.querySelector('.bullying-warning');
+              if (existingWarning) {
+                existingWarning.remove();
+              }
             }
           }
         );
       }
-    });
+    }
+    
+    // Start periodic checking for this input field
+    const intervalId = setInterval(checkForBullying, 5000);
+    
+    // Store the interval ID to clean up if needed
+    input.dataset.checkIntervalId = intervalId;
   });
 }
 
@@ -68,6 +68,9 @@ window.addEventListener('load', monitorTextFields);
 
 // Function to show result overlay
 function showResultOverlay(text, result) {
+  // Only show overlay for cyberbullying content
+  if (result.prediction !== "cyberbullying") return;
+  
   // Remove existing overlay if present
   const existingOverlay = document.getElementById('bullying-result-overlay');
   if (existingOverlay) {
@@ -107,41 +110,43 @@ function showResultOverlay(text, result) {
   
   // Create content
   const title = document.createElement('h3');
-  title.style.margin = '0 0 10px 0';
+  title.textContent = '🚨 Cyberbullying Detected';
+  title.style.cssText = 'margin: 0 0 10px 0; color: #d32f2f;';
   
   const content = document.createElement('div');
-  
-  if (result.prediction === "cyberbullying") {
-    title.textContent = '🚨 Cyberbullying Detected';
-    title.style.color = '#d32f2f';
-    
-    content.innerHTML = `
-      <p>The text appears to contain harmful content.</p>
-      <div style="margin-top: 10px;">
-        <strong>Categories detected:</strong>
-        <ul style="margin-top: 5px;">
-          ${Object.entries(result.probabilities)
-            .map(([category, score]) => 
-              `<li>${category}: ${Math.round(score * 100)}%</li>`
-            ).join('')}
-        </ul>
-      </div>
-    `;
-  } else {
-    title.textContent = '✅ Safe Content';
-    title.style.color = '#388e3c';
-    content.innerHTML = '<p>No cyberbullying content detected.</p>';
-  }
+  content.innerHTML = `
+    <p>The text appears to contain harmful content.</p>
+    <div style="margin-top: 10px;">
+      <strong>Categories detected:</strong>
+      <ul style="margin-top: 5px;">
+        ${Object.entries(result.probabilities)
+          .map(([category, score]) => 
+            `<li>${category}: ${Math.round(score * 100)}%</li>`
+          ).join('')}
+      </ul>
+    </div>
+  `;
   
   // Assemble and append overlay
   overlay.appendChild(closeBtn);
   overlay.appendChild(title);
   overlay.appendChild(content);
   document.body.appendChild(overlay);
+  
+  // Auto-remove after 10 seconds
+  setTimeout(() => {
+    if (overlay.parentNode) {
+      overlay.remove();
+    }
+  }, 10000);
 }
 
 // Function to show warning on text input
 function showWarning(inputElement, result) {
+  // Don't create a new warning if one already exists
+  const existingWarning = inputElement.parentNode.querySelector('.bullying-warning');
+  if (existingWarning) return;
+  
   // Create warning element
   const warning = document.createElement('div');
   warning.className = 'bullying-warning';
@@ -159,12 +164,6 @@ function showWarning(inputElement, result) {
     <p>Please consider rephrasing before posting.</p>
   `;
   
-  // Remove existing warning if present
-  const existingWarning = inputElement.parentNode.querySelector('.bullying-warning');
-  if (existingWarning) {
-    existingWarning.remove();
-  }
-  
   // Add warning after input
   inputElement.parentNode.insertBefore(warning, inputElement.nextSibling);
   
@@ -176,35 +175,4 @@ function showWarning(inputElement, result) {
   }, 10000);
 }
 
-// Function to show "safe" indicator
-function showSafe(inputElement) {
-  // Remove existing warnings
-  const existingWarning = inputElement.parentNode.querySelector('.bullying-warning');
-  if (existingWarning) {
-    existingWarning.remove();
-  }
-  
-  // Create safe element
-  const safe = document.createElement('div');
-  safe.className = 'bullying-safe';
-  safe.style.cssText = `
-    color: #388e3c;
-    background: #e8f5e9;
-    border: 1px solid #c8e6c9;
-    padding: 10px;
-    margin-top: 5px;
-    border-radius: 4px;
-  `;
-  
-  safe.innerHTML = `<p><strong>✅ Safe:</strong> No cyberbullying content detected.</p>`;
-  
-  // Add safe indicator after input
-  inputElement.parentNode.insertBefore(safe, inputElement.nextSibling);
-  
-  // Auto-remove after 3 seconds
-  setTimeout(() => {
-    if (safe.parentNode) {
-      safe.remove();
-    }
-  }, 3000);
-}
+// The showSafe function is no longer needed as we only show warnings
