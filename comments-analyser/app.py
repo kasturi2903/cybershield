@@ -82,7 +82,7 @@ def predict_text(text):
 
     # Whitelist for clearly positive/non-cyberbullying phrases
     whitelist = [
-        "i like you", "i am grateful", "you are amazing", "thank you", "you are kind",
+       "i am grateful", "you are amazing", "thank you", "you are kind",
         "you are smart", "have a nice day", "you're wonderful", "i appreciate you"
     ]
 
